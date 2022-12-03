@@ -8,51 +8,40 @@ public class Rucksack {
     }
 
     public Integer priorityOfCommonItem() {
-        String commonItem = this.commonItem();
+        char commonItem = this.commonItem();
 
-        Integer num = 1;
-        for (char c = 'a'; c <= 'z'; ++c) {
-            if (commonItem.charAt(0) == c) {
-                return num;
-            }
-            num++;
-        }
-
-        for (char c = 'A'; c <= 'Z'; ++c) {
-            if (commonItem.charAt(0) == c) {
-                return num;
-            }
-            num++;
-        }
-
-        throw new Error("Huh??");
+        return new Priority(commonItem).value();
     }
 
-    private String commonItem() {
-        String[] first = this.itemsInFirstCompartment();
-        String[] second = this.itemsInSecondCompartment();
+    public char[] allItems() {
+        return this.line.toCharArray();
+    }
 
-        for (String item: first) {
-            for (String otherItem: second) {
+    private char commonItem() {
+        char[] first = this.itemsInFirstCompartment();
+        char[] second = this.itemsInSecondCompartment();
+
+        for (char item: first) {
+            for (char otherItem: second) {
                 if (Objects.equals(item, otherItem)) {
                     return item;
                 }
             }
         }
 
-        throw new Error("No overlap found in \n" + String.join("", first) + "\nand\n" + String.join("", second));
+        throw new Error("No overlap found");
     }
 
-    private String[] itemsInFirstCompartment() {
+    private char[] itemsInFirstCompartment() {
         Integer length = this.line.length() / 2;
 
-        return Arrays.copyOfRange(this.line.split(""), 0, length);
+        return Arrays.copyOfRange(this.allItems(), 0, length);
     }
 
-    private String[] itemsInSecondCompartment() {
+    private char[] itemsInSecondCompartment() {
         Integer length = this.line.length();
 
-        return Arrays.copyOfRange(this.line.split(""), length / 2, length);
+        return Arrays.copyOfRange(this.allItems(), length / 2, length);
     }
 
 }
