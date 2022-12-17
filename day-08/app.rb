@@ -48,6 +48,20 @@ class Forest
     end.size
   end
 
+  def highest_scenic_score
+    scores = []
+
+    @trees.each.with_index do |row, y|
+      row.each.with_index do |tree, x|
+        scores.push scenic_score_for(tree)
+      end
+    end
+
+    scores.sort.last
+  end
+
+  private
+
   def forest_from_all_four_angles
     [
       @trees,
@@ -55,6 +69,39 @@ class Forest
       @trees.map(&:reverse),
       @trees.transpose.map(&:reverse),
     ]
+  end
+
+  def scenic_score_for(tree_to_score)
+    viewing_distances = []
+
+    forest_from_all_four_angles.each do |trees_from_one_angle|
+      viewing_distances.push viewing_distance_for(trees_from_one_angle, tree_to_score)
+    end
+
+    viewing_distances.reduce(:*)
+  end
+
+  def viewing_distance_for(trees_from_one_angle, tree_to_score)
+    trees_from_one_angle.each do |row|
+      row.each.with_index do |tree, idx|
+        if tree.id == tree_to_score.id
+          trees_in_this_direction = row[(idx + 1)..]
+          count = 0
+          trees_in_this_direction.each do |tree_in_this_direction|
+            count += 1
+
+            if tree_in_this_direction.height >= tree.height
+              break
+            end
+          end
+
+
+          return count
+        end
+      end
+    end
+
+    raise
   end
 end
 
@@ -70,10 +117,12 @@ class ForestTest < Minitest::Test
   end
 
   def test_example_part_two
-    skip "not yet"
+    forest = Forest.new("./example.txt")
+    assert_equal 8, forest.highest_scenic_score
   end
 
   def test_actual_part_two
-    skip "not yet"
+    forest = Forest.new("./input.txt")
+    assert_equal 315495, forest.highest_scenic_score
   end
 end
