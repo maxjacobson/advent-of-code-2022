@@ -49,6 +49,8 @@ class AOCDir
 end
 
 class FileSystem
+  DISK_SIZE = 70_000_000
+  REQUIRED_UNUSED_SPACE = 30_000_000
   COMMAND_PATTERN = /^\$ (.+)$\n/
   LS_OUTPUT_PATTERN = /^(dir|\d+) ([a-z\.]+)$\n/
 
@@ -59,8 +61,19 @@ class FileSystem
   def sum_of_small_directories
     root.
       recursive_directories.
-      select { |dir| dir.size <= 100000 }.
+      select { |dir| dir.size <= 100_000 }.
       reduce(0) { |acc, dir| acc + dir.size }
+  end
+
+  def size_of_directory_to_delete
+    unused_space = DISK_SIZE - root.size
+    delta = REQUIRED_UNUSED_SPACE - unused_space
+    candidates = root.
+      recursive_directories.
+      select { |dir| dir.size >= delta }.
+      map(&:size).
+      sort.
+      first
   end
 
   def root
@@ -117,10 +130,14 @@ class FileSystemTest < Minitest::Test
   end
 
   def test_example_part_two
-    skip "not yet"
+    fs = FileSystem.new("./example.txt")
+
+    assert_equal 24933642, fs.size_of_directory_to_delete
   end
 
   def test_actual_part_two
-    skip "not yet"
+    fs = FileSystem.new("./input.txt")
+
+    assert_equal 1117448, fs.size_of_directory_to_delete
   end
 end
