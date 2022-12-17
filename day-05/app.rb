@@ -86,12 +86,18 @@ class Crane
     @instructions = InstructionsParser.new(instructions).instructions
   end
 
-  def apply_instructions
+  def apply_instructions(retain_order: false)
     @instructions.each do |instruction|
       source = @stacks.detect { |stack| stack.name == instruction.source }
       target = @stacks.detect { |stack| stack.name == instruction.target }
-      instruction.amount.times do
-        target.value.unshift source.value.shift
+      if retain_order
+        # part two
+        target.value.unshift(*source.value.shift(instruction.amount))
+      else
+        # part one
+        instruction.amount.times do
+          target.value.unshift source.value.shift
+        end
       end
     end
   end
@@ -112,6 +118,19 @@ class CraneTest < Minitest::Test
   def test_actual
     crane = Crane.new('./input.txt')
     crane.apply_instructions
-    assert_equal '???', crane.top_values
+    assert_equal 'LBLVVTVLP', crane.top_values
+  end
+
+  def test_example_part_two
+    crane = Crane.new('./example.txt')
+    assert_equal 'NDP', crane.top_values
+    crane.apply_instructions(retain_order: true)
+    assert_equal 'MCD', crane.top_values
+  end
+
+  def test_actual_part_two
+    crane = Crane.new('./input.txt')
+    crane.apply_instructions(retain_order: true)
+    assert_equal 'TPFFBDRJD', crane.top_values
   end
 end
