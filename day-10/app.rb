@@ -32,6 +32,22 @@ class Computer
     values.inject(:+)
   end
 
+  def draw_output
+    pixels = Array.new(6 * 40)
+
+    x_over_time.each do |cycle, x|
+      currently_drawing_x = ((cycle-1)% 40)
+
+      if ((x-1)..(x+1)).cover?(currently_drawing_x)
+        pixels[cycle - 1] = '#'
+      else
+        pixels[cycle - 1] = '.'
+      end
+    end
+
+    pixels.each_slice(40).to_a.map { |row| row.join("") }.join("\n")
+  end
+
   private
 
   def x_over_time
@@ -75,10 +91,27 @@ class ComputerTest< Minitest::Test
   end
 
   def test_example_part_two
-    skip "not yet"
+    computer = Computer.new("./example.txt")
+
+    assert_equal <<~OUTPUT.chomp, computer.draw_output
+      ##..##..##..##..##..##..##..##..##..##..
+      ###...###...###...###...###...###...###.
+      ####....####....####....####....####....
+      #####.....#####.....#####.....#####.....
+      ######......######......######......####
+      #######.......#######.......#######.....
+    OUTPUT
   end
 
   def test_actual_part_two
-    skip "not yet"
+    computer = Computer.new("./input.txt")
+    assert_equal <<~OUTPUT.chomp, computer.draw_output
+      ###...##...##..####.#..#.#....#..#.####.
+      #..#.#..#.#..#.#....#.#..#....#..#.#....
+      ###..#..#.#....###..##...#....####.###..
+      #..#.####.#....#....#.#..#....#..#.#....
+      #..#.#..#.#..#.#....#.#..#....#..#.#....
+      ###..#..#..##..####.#..#.####.#..#.#....
+    OUTPUT
   end
 end
