@@ -8,6 +8,7 @@ class Monkey
     :test,
     :when_true,
     :when_false,
+    :divisibility_check,
   )
 
   attr_accessor(
@@ -24,6 +25,7 @@ class Monkey
       test: parse_test(test),
       when_true: parse_when_true(when_true),
       when_false: parse_when_false(when_false),
+      divisibility_check: parse_divisibility_check(test),
     )
   end
 
@@ -49,6 +51,11 @@ class Monkey
     }
   end
 
+  def self.parse_divisibility_check(str)
+    test = str.match(/Test: divisible by (\d+)$/)
+    test[1].to_i
+  end
+
   def self.parse_when_true(str)
     str.match(/If true: throw to monkey (\d+)$/)[1].to_i
   end
@@ -57,7 +64,7 @@ class Monkey
     str.match(/If false: throw to monkey (\d+)$/)[1].to_i
   end
 
-  def initialize(name:, items:, operation:, test:, when_true:, when_false:)
+  def initialize(name:, items:, operation:, test:, when_true:, when_false:, divisibility_check:)
     @name = name
     @items = items
     @operation = operation
@@ -65,6 +72,7 @@ class Monkey
     @when_false = when_false
     @test = test
     @inspection_counter = 0
+    @divisibility_check = divisibility_check
   end
 end
 
@@ -86,6 +94,7 @@ class MonkeyTest < Minitest::Test
     assert_equal monkey.test.(24 * 2), false
     assert_equal monkey.when_true, 2
     assert_equal monkey.when_false, 3
+    assert_equal monkey.divisibility_check, 23
   end
 end
 
@@ -94,21 +103,27 @@ class MonkeyBusiness
     @filename = filename
   end
 
-  def product_of_two_most_active_monkeys_after_twenty_rounds
+  def product_of_two_most_active_monkeys(rounds:, relief_factor:)
     monkeys = File.read(@filename).split("\n\n").map do |monkey_text|
       Monkey.parse(monkey_text)
     end
 
-    20.times do
+    lcm = monkeys.map(&:divisibility_check).inject(:*)
+
+    rounds.times do
       monkeys.each do |monkey|
         monkey.items.each.with_index do |item, index|
           monkey.inspection_counter += 1
           monkey.items[index] = item = monkey.operation.(item)
-          monkey.items[index] = item = (item / 3.0).floor
+          if relief_factor
+            monkey.items[index] = item = (item / relief_factor).floor
+          end
+
+          new = item % lcm
           if monkey.test.(item)
-            monkeys[monkey.when_true].items.push(item)
+            monkeys[monkey.when_true].items.push(new)
           else
-            monkeys[monkey.when_false].items.push(item)
+            monkeys[monkey.when_false].items.push(new)
           end
         end
 
@@ -123,19 +138,23 @@ end
 class MonkeyBusinessTest < Minitest::Test
   def test_example
     business = MonkeyBusiness.new("./example.txt")
-    assert_equal 10605, business.product_of_two_most_active_monkeys_after_twenty_rounds
+    assert_equal 10605, business.product_of_two_most_active_monkeys(rounds: 20, relief_factor: 3.0)
   end
 
   def test_actual
     business = MonkeyBusiness.new("./input.txt")
-    assert_equal 66124, business.product_of_two_most_active_monkeys_after_twenty_rounds
+    assert_equal 66124, business.product_of_two_most_active_monkeys(rounds: 20, relief_factor: 3.0)
   end
 
   def test_example_part_two
-    skip "not yet"
+    business = MonkeyBusiness.new("./example.txt")
+    assert_equal 2713310158, business.product_of_two_most_active_monkeys(rounds: 10_000, relief_factor: nil)
   end
 
+  # N.B. I cheated! had to reference this
+  # https://nickymeuleman.netlify.app/garden/aoc2022-day11#part-2
   def test_actual_part_two
-    skip "not yet"
+    business = MonkeyBusiness.new("./input.txt")
+    assert_equal 19309892877, business.product_of_two_most_active_monkeys(rounds: 10_000, relief_factor: nil)
   end
 end
